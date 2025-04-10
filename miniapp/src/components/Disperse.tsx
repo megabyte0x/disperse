@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useAccount, useDisconnect, useConnect, useSwitchChain, useChainId } from "wagmi";
+import { useAccount, useDisconnect, useConnect, useSwitchChain, useChainId, useWaitForTransactionReceipt, useSendTransaction } from "wagmi";
 import { formatUnits, encodeFunctionData } from "viem";
 import { base } from "wagmi/chains";
-import { useWaitForTransactionReceipt, useSendTransaction } from "wagmi";
 import sdk from "@farcaster/frame-sdk";
 
 import { Label } from "~/components/ui/label";
@@ -13,6 +12,7 @@ import { Button } from "~/components/ui/Button";
 import { truncateAddress } from "~/lib/truncateAddress";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "~/lib/constants";
 import RecipientTable from "~/components/RecipientTable";
+import TokenBalance from "~/components/TokenBalance";
 
 export default function Disperse() {
     const { address, isConnected } = useAccount();
@@ -160,8 +160,10 @@ export default function Disperse() {
             ) : (
                 <>
                     <div className="mb-4">
-                        <div className="flex justify-between items-center mb-2">
+                        <div className="justify-between items-center mb-2">
                             <span>Connected: {truncateAddress(address || '')}</span>
+                            <br />
+                            <br />
                             <Button
                                 onClick={() => disconnect()}
                                 className="text-xs px-2 py-1"
@@ -198,6 +200,8 @@ export default function Disperse() {
                             />
                         </div>
                     )}
+
+                    <TokenBalance token={token} tokenAddress={token === 'token' ? tokenAddress : undefined} />
 
                     <div className="mb-4">
                         <Label htmlFor="recipients">Recipients</Label>
