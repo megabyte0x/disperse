@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useAccount, useDisconnect, useConnect, useSwitchChain, useChainId } from "wagmi";
-import { parseUnits, formatUnits, encodeFunctionData } from "viem";
+import { formatUnits, encodeFunctionData } from "viem";
 import { base } from "wagmi/chains";
 import { useWaitForTransactionReceipt, useSendTransaction } from "wagmi";
 import sdk from "@farcaster/frame-sdk";
@@ -12,6 +12,7 @@ import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/Button";
 import { truncateAddress } from "~/lib/truncateAddress";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "~/lib/constants";
+import RecipientTable from "~/components/RecipientTable";
 
 export default function Disperse() {
     const { address, isConnected } = useAccount();
@@ -20,7 +21,6 @@ export default function Disperse() {
     const { connect, connectors } = useConnect();
     const { switchChain } = useSwitchChain();
 
-    const [inputText, setInputText] = useState("");
     const [token, setToken] = useState("eth");
     const [tokenAddress, setTokenAddress] = useState("");
     const [amountSum, setAmountSum] = useState(0n);
@@ -53,40 +53,6 @@ export default function Disperse() {
         };
 
         checkSDK();
-    }, []);
-
-    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setInputText(e.target.value);
-
-        // Parse the input text to get recipients and amounts
-        try {
-            const lines = e.target.value.split('\n').filter(line => line.trim());
-            const parsedRecipients = lines.map(line => {
-                const [address, amountStr] = line.split(/[,\s]+/).filter(Boolean);
-
-                if (!address || !amountStr) {
-                    throw new Error(`Invalid line: ${line}`);
-                }
-
-                // Basic address validation
-                if (!address.startsWith('0x') || address.length !== 42) {
-                    throw new Error(`Invalid Ethereum address: ${address}`);
-                }
-
-                // Parse amount
-                const amount = parseUnits(amountStr, 18); // Assuming 18 decimals
-                return { address, amount };
-            });
-
-            const sum = parsedRecipients.reduce((acc, { amount }) => acc + amount, 0n);
-            setAmountSum(sum);
-            setRecipients(parsedRecipients);
-            setError(null);
-        } catch (err) {
-            setError((err as Error).message);
-            setRecipients([]);
-            setAmountSum(0n);
-        }
     }, []);
 
     const handleTokenChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -234,16 +200,11 @@ export default function Disperse() {
                     )}
 
                     <div className="mb-4">
-                        <Label htmlFor="recipients">
-                            Addresses with Amounts
-                            <span className="text-xs ml-1 text-gray-500">(one per line)</span>
-                        </Label>
-                        <textarea
-                            id="recipients"
-                            className="flex h-40 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="0xAddress1 1.5&#10;0xAddress2 2.3&#10;..."
-                            value={inputText}
-                            onChange={handleInputChange}
+                        <Label htmlFor="recipients">Recipients</Label>
+                        <RecipientTable
+                            onChange={setRecipients}
+                            onError={setError}
+                            onAmountSum={setAmountSum}
                         />
                         {error && (
                             <p className="text-red-500 text-xs mt-1">{error}</p>
