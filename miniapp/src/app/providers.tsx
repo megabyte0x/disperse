@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import type { Session } from "next-auth"
 import { SessionProvider } from "next-auth/react"
 import { FrameProvider } from "~/components/providers/FrameProvider";
+import { NeynarProvider } from "~/components/providers/NeynarProvider";
 
 const WagmiProvider = dynamic(
   () => import("~/components/providers/WagmiProvider"),
@@ -17,7 +18,9 @@ export function Providers({ session, children }: { session?: Session | null, chi
     <SessionProvider session={session || null}>
       <WagmiProvider>
         <FrameProvider>
-          {children}
+          <NeynarProvider>
+            {children}
+          </NeynarProvider>
         </FrameProvider>
       </WagmiProvider>
     </SessionProvider>
