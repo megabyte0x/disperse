@@ -1,6 +1,16 @@
 {
     "abi": [
         {
+            "inputs": [],
+            "name": "InvalidRecipientsAndAmountsLength",
+            "type": "error"
+        },
+        {
+            "inputs": [],
+            "name": "TransferFailed",
+            "type": "error"
+        },
+        {
             "inputs": [
                 {
                     "internalType": "address[]",
@@ -9,11 +19,11 @@
                 },
                 {
                     "internalType": "uint256[]",
-                    "name": "values",
+                    "name": "amounts",
                     "type": "uint256[]"
                 }
             ],
-            "name": "disperseEther",
+            "name": "disperseETH",
             "outputs": [],
             "stateMutability": "payable",
             "type": "function"
@@ -21,7 +31,7 @@
         {
             "inputs": [
                 {
-                    "internalType": "contract IERC20",
+                    "internalType": "address",
                     "name": "token",
                     "type": "address"
                 },
@@ -44,7 +54,7 @@
         {
             "inputs": [
                 {
-                    "internalType": "contract IERC20",
+                    "internalType": "address",
                     "name": "token",
                     "type": "address"
                 },
