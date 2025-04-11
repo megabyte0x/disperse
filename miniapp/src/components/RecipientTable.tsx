@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { parseUnits } from "viem";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/input";
+import UserSearch from "~/components/UserSearch";
+import { Label } from "~/components/ui/label";
 
 interface Recipient {
     id: string; // Add unique ID for keys
@@ -21,6 +23,8 @@ export default function RecipientTable({ onChange, onError, onAmountSum }: Recip
         { id: crypto.randomUUID(), address: "", amount: 0n, amountStr: "" },
     ]);
     const [canAddRow, setCanAddRow] = useState(false);
+    const [selectedAddress, setSelectedAddress] = useState("");
+    const [searchResultAmount, setSearchResultAmount] = useState("");
 
     useEffect(() => {
         // Check if the last row is complete to enable the add button
@@ -67,7 +71,7 @@ export default function RecipientTable({ onChange, onError, onAmountSum }: Recip
             if (recipientIndex !== -1 && value) {
                 try {
                     newRecipients[recipientIndex].amount = parseUnits(value, 18);
-                } catch (err) {
+                } catch {
                     // Invalid amount format, but keep the string value
                     newRecipients[recipientIndex].amount = 0n;
                 }
@@ -87,49 +91,99 @@ export default function RecipientTable({ onChange, onError, onAmountSum }: Recip
         }
     };
 
+    const handleAddSearchResult = () => {
+        if (selectedAddress && searchResultAmount) {
+            try {
+                const amount = parseUnits(searchResultAmount, 18);
+                const newRecipient = {
+                    id: crypto.randomUUID(),
+                    address: selectedAddress,
+                    amount,
+                    amountStr: searchResultAmount
+                };
+
+                setRecipients([...recipients, newRecipient]);
+                setSelectedAddress("");
+                setSearchResultAmount("");
+            } catch {
+                onError("Invalid amount format");
+            }
+        }
+    };
+
     return (
         <div className="w-full">
-            <div className="grid grid-cols-[1fr_1fr_40px] gap-2 mb-2 font-medium">
-                <div>Address</div>
-                <div>Amount</div>
-                <div />
-            </div>
-
-            {recipients.map((recipient) => (
-                <div key={recipient.id} className="grid grid-cols-[1fr_1fr_40px] gap-2 mb-2">
-                    <Input
-                        type="text"
-                        placeholder="0x..."
-                        value={recipient.address}
-                        onChange={(e) => updateRecipient(recipient.id, "address", e.target.value)}
-                        className="text-sm"
-                    />
-                    <Input
-                        type="text"
-                        placeholder="1.5"
-                        value={recipient.amountStr}
-                        onChange={(e) => updateRecipient(recipient.id, "amountStr", e.target.value)}
-                        className="text-sm"
-                    />
-                    {recipients.length > 1 && (
-                        <Button
-                            onClick={() => removeRow(recipient.id)}
-                            className="p-0 w-8 h-8 text-red-500"
-                        >
-                            ✕
-                        </Button>
+            <div className="mb-4">
+                <Label htmlFor="farcaster-search">Search Farcaster Username</Label>
+                <div className="mt-1">
+                    <UserSearch onSelectUser={setSelectedAddress} />
+                    {selectedAddress && (
+                        <div className="mt-2 p-2 border border-gray-200 dark:border-gray-700 rounded-md">
+                            <p className="text-sm mb-2">Selected Address: {selectedAddress}</p>
+                            <div className="flex gap-2">
+                                <Input
+                                    type="text"
+                                    placeholder="Amount (e.g. 1.5)"
+                                    value={searchResultAmount}
+                                    onChange={(e) => setSearchResultAmount(e.target.value)}
+                                    className="text-sm"
+                                />
+                                <Button
+                                    onClick={handleAddSearchResult}
+                                    disabled={!searchResultAmount}
+                                    className="text-sm"
+                                >
+                                    Add
+                                </Button>
+                            </div>
+                        </div>
                     )}
                 </div>
-            ))}
+            </div>
 
-            {canAddRow && (
-                <Button
-                    onClick={addRow}
-                    className="mt-2 text-sm"
-                >
-                    + Add Recipient
-                </Button>
-            )}
+            <div className="mt-6">
+                <div className="grid grid-cols-[1fr_1fr_40px] gap-2 mb-2 font-medium">
+                    <div>Address</div>
+                    <div>Amount</div>
+                    <div />
+                </div>
+
+                {recipients.map((recipient) => (
+                    <div key={recipient.id} className="grid grid-cols-[1fr_1fr_40px] gap-2 mb-2">
+                        <Input
+                            type="text"
+                            placeholder="0x..."
+                            value={recipient.address}
+                            onChange={(e) => updateRecipient(recipient.id, "address", e.target.value)}
+                            className="text-sm"
+                        />
+                        <Input
+                            type="text"
+                            placeholder="1.5"
+                            value={recipient.amountStr}
+                            onChange={(e) => updateRecipient(recipient.id, "amountStr", e.target.value)}
+                            className="text-sm"
+                        />
+                        {recipients.length > 1 && (
+                            <Button
+                                onClick={() => removeRow(recipient.id)}
+                                className="p-0 w-8 h-8 text-red-500"
+                            >
+                                ✕
+                            </Button>
+                        )}
+                    </div>
+                ))}
+
+                {canAddRow && (
+                    <Button
+                        onClick={addRow}
+                        className="mt-2 text-sm"
+                    >
+                        + Add Recipient
+                    </Button>
+                )}
+            </div>
         </div>
     );
 } 
